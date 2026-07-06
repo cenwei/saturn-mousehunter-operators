@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use serde_json::Value;
 
 // —— Core data types ——
@@ -12,6 +14,10 @@ pub struct Bar {
     pub low: f64,
     pub close: f64,
     pub volume: f64,
+    /// Dynamic columns injected by upstream pipeline steps (e.g. indicator output).
+    /// Column name → scalar value at this bar.
+    #[allow(dead_code)]
+    pub extra_columns: BTreeMap<String, f64>,
 }
 
 // —— Operator metadata ——
@@ -25,6 +31,10 @@ pub struct OperatorMeta {
     pub output_columns: &'static [&'static str],
     pub input_fields_zh: Value,
     pub output_fields_zh: Value,
+    /// One-sentence Chinese description of what this operator does.
+    pub description_zh: &'static str,
+    /// Default parameter values as a JSON object.
+    pub default_params: Value,
 }
 
 impl OperatorMeta {
@@ -41,6 +51,8 @@ impl OperatorMeta {
             "operator_type": self.operator_type,
             "runtime": "rust",
             "status": "stable",
+            "description_zh": self.description_zh,
+            "default_params": self.default_params,
             "input_contract": {
                 "contract_version": contract_version,
                 "execution_model": execution_model,

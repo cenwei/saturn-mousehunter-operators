@@ -228,6 +228,7 @@ mod tests {
             low: close - 0.3,
             close,
             volume,
+            extra_columns: BTreeMap::new(),
         }
     }
 

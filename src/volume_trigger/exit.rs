@@ -101,9 +101,9 @@ mod tests {
             low: close - 0.3,
             close,
             volume,
+            extra_columns: BTreeMap::new(),
         }
     }
-
     #[test]
     fn reverse_short_exit_matches_after_entry() {
         let entry = VolumeTriggerSignal {

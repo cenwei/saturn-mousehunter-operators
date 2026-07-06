@@ -89,7 +89,7 @@ impl Default for VolumeTriggerParams {
             slow_threshold: 2.0,
             direction_lookback_bars: 6,
             daily_ma120_ma200_gate_enabled: true,
-            cascade_direction_enabled: true,
+            cascade_direction_enabled: false,
             cascade_direction_fast: 5,
             cascade_direction_slow: 20,
             target_position_per_trade: 0.16,
