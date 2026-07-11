@@ -142,12 +142,8 @@ pub fn detect_volume_trigger_signals(
                 continue;
             }
 
-            let fast_baseline =
-                fast_window.iter().sum::<f64>() / fast_window.len() as f64;
-            let slow_baseline = slow_window
-                .iter()
-                .cloned()
-                .fold(0.0_f64, f64::max);
+            let fast_baseline = fast_window.iter().sum::<f64>() / fast_window.len() as f64;
+            let slow_baseline = slow_window.iter().cloned().fold(0.0_f64, f64::max);
 
             if fast_baseline <= 0.0 || slow_baseline <= 0.0 {
                 continue;
@@ -171,14 +167,8 @@ pub fn detect_volume_trigger_signals(
                 continue;
             }
 
-            let ref_max = ref_closes
-                .iter()
-                .cloned()
-                .fold(f64::NEG_INFINITY, f64::max);
-            let ref_min = ref_closes
-                .iter()
-                .cloned()
-                .fold(f64::INFINITY, f64::min);
+            let ref_max = ref_closes.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+            let ref_min = ref_closes.iter().cloned().fold(f64::INFINITY, f64::min);
 
             let signal_type = if closes[i] > ref_max {
                 VolumeTriggerSignalType::Long
@@ -265,9 +255,7 @@ mod tests {
     #[test]
     fn signal_requires_volume_spike() {
         // Create 20 days of bars with small volume, then one day with huge volume + price breakout
-        let days: Vec<String> = (0..20)
-            .map(|d| format!("2026-01-{:02}", d + 2))
-            .collect();
+        let days: Vec<String> = (0..20).map(|d| format!("2026-01-{:02}", d + 2)).collect();
         let day_strs: Vec<&str> = days.iter().map(|s| s.as_str()).collect();
 
         let mut closes = vec![10.0; 20];
@@ -291,16 +279,17 @@ mod tests {
 
         let result = detect_volume_trigger_signals(&bars, &by_symbol, &params);
         // The last day (day 19, 0-indexed) has close=12.0 which should be > max of prev 6 closes (all ~10.0)
-        assert!(!result.entries.is_empty(), "Should detect volume spike + price breakout");
+        assert!(
+            !result.entries.is_empty(),
+            "Should detect volume spike + price breakout"
+        );
         let signal = &result.entries[0];
         assert_eq!(signal.signal_type, VolumeTriggerSignalType::Long);
     }
 
     #[test]
     fn short_signal_stored_in_exits() {
-        let days: Vec<String> = (0..20)
-            .map(|d| format!("2026-01-{:02}", d + 2))
-            .collect();
+        let days: Vec<String> = (0..20).map(|d| format!("2026-01-{:02}", d + 2)).collect();
         let day_strs: Vec<&str> = days.iter().map(|s| s.as_str()).collect();
 
         let mut closes = vec![10.0; 20];
@@ -319,7 +308,10 @@ mod tests {
         };
 
         let result = detect_volume_trigger_signals(&bars, &by_symbol, &params);
-        assert!(result.entries.is_empty(), "Drop day should not produce long signals");
+        assert!(
+            result.entries.is_empty(),
+            "Drop day should not produce long signals"
+        );
         assert!(
             result.exits_by_symbol.contains_key("TEST"),
             "Short signal should be in exits_by_symbol"

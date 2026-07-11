@@ -61,11 +61,7 @@ pub fn detect_ma20_entry_signal(
     }
 
     // ema_pullback: close near EMA20 in uptrend, bullish candle, decent volume
-    if close > ema20
-        && close < ema20 * 1.03
-        && ma20_slope > 0.0
-        && close > open
-        && vol_ratio > 0.8
+    if close > ema20 && close < ema20 * 1.03 && ma20_slope > 0.0 && close > open && vol_ratio > 0.8
     {
         return Some(Ma20SignalResult {
             signal_kind: Ma20SignalKind::EmaPullback,

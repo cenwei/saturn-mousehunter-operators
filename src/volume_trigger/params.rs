@@ -115,28 +115,32 @@ impl VolumeTriggerParams {
         let mut p = Self::default();
 
         // Volume trigger master switch
-        if let Some(v) = params.get("volume_trigger_signal_enabled").and_then(Value::as_bool) {
+        if let Some(v) = params
+            .get("volume_trigger_signal_enabled")
+            .and_then(Value::as_bool)
+        {
             p.volume_trigger_signal_enabled = v;
         }
 
-        // Fast threshold: check both canonical and legacy keys
+        // Fast threshold: check legacy keys first so trial param values take priority
+        // over pipeline/registry defaults that use canonical (trigger_*) names.
         p.fast_threshold = params
-            .get("trigger_fast_threshold")
-            .or_else(|| params.get("fast_threshold"))
+            .get("fast_threshold")
+            .or_else(|| params.get("trigger_fast_threshold"))
             .and_then(Value::as_f64)
             .unwrap_or(p.fast_threshold);
 
         // Slow threshold
         p.slow_threshold = params
-            .get("trigger_slow_threshold")
-            .or_else(|| params.get("slow_threshold"))
+            .get("slow_threshold")
+            .or_else(|| params.get("trigger_slow_threshold"))
             .and_then(Value::as_f64)
             .unwrap_or(p.slow_threshold);
 
         // Fast window days
         p.fast_window_days = params
-            .get("trigger_fast_window_days")
-            .or_else(|| params.get("fast_window_days"))
+            .get("fast_window_days")
+            .or_else(|| params.get("trigger_fast_window_days"))
             .and_then(|v| v.as_u64())
             .map(|v| v as usize)
             .unwrap_or(p.fast_window_days)
@@ -144,8 +148,8 @@ impl VolumeTriggerParams {
 
         // Slow window days
         p.slow_window_days = params
-            .get("trigger_slow_window_days")
-            .or_else(|| params.get("slow_window_days"))
+            .get("slow_window_days")
+            .or_else(|| params.get("trigger_slow_window_days"))
             .and_then(|v| v.as_u64())
             .map(|v| v as usize)
             .unwrap_or(p.slow_window_days)
@@ -160,10 +164,16 @@ impl VolumeTriggerParams {
             .max(1);
 
         // Gates
-        if let Some(v) = params.get("daily_ma120_ma200_buy_gate_enabled").and_then(Value::as_bool) {
+        if let Some(v) = params
+            .get("daily_ma120_ma200_buy_gate_enabled")
+            .and_then(Value::as_bool)
+        {
             p.daily_ma120_ma200_gate_enabled = v;
         }
-        if let Some(v) = params.get("cascade_direction_enabled").and_then(Value::as_bool) {
+        if let Some(v) = params
+            .get("cascade_direction_enabled")
+            .and_then(Value::as_bool)
+        {
             p.cascade_direction_enabled = v;
         }
 
@@ -300,8 +310,9 @@ mod tests {
     }
 
     #[test]
-    fn from_value_canonical_keys_take_precedence() {
-        // Canonical keys should override legacy keys when both are present
+    fn from_value_legacy_keys_take_precedence() {
+        // Legacy keys (fast_threshold) take priority over canonical keys (trigger_fast_threshold)
+        // so that trial parameter values from optimize-fusion override pipeline defaults.
         let json = serde_json::json!({
             "fast_threshold": 0.35,
             "trigger_fast_threshold": 0.5,
@@ -309,9 +320,8 @@ mod tests {
             "trigger_slow_threshold": 2.0,
         });
         let p = VolumeTriggerParams::from_value(&json);
-        // trigger_fast_threshold (canonical) should take precedence
-        assert_eq!(p.fast_threshold, 0.5);
-        assert_eq!(p.slow_threshold, 2.0);
+        assert_eq!(p.fast_threshold, 0.35);
+        assert_eq!(p.slow_threshold, 1.0);
     }
 
     #[test]

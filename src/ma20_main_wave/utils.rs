@@ -74,7 +74,10 @@ pub fn enforce_t_plus_one(parameters: &serde_json::Value, symbol: &str) -> bool 
     }
     if market.is_empty() {
         let s = symbol.trim().to_ascii_uppercase();
-        return s.starts_with("SH") || s.starts_with("SZ") || s.ends_with(".SH") || s.ends_with(".SZ");
+        return s.starts_with("SH")
+            || s.starts_with("SZ")
+            || s.ends_with(".SH")
+            || s.ends_with(".SZ");
     }
     false
 }

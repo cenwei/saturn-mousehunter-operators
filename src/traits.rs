@@ -35,6 +35,8 @@ pub struct OperatorMeta {
     pub description_zh: &'static str,
     /// Default parameter values as a JSON object.
     pub default_params: Value,
+    /// Per-parameter Chinese descriptions: {"param_name": "中文描述", ...}
+    pub param_descriptions_zh: Value,
 }
 
 impl OperatorMeta {
@@ -53,6 +55,7 @@ impl OperatorMeta {
             "status": "stable",
             "description_zh": self.description_zh,
             "default_params": self.default_params,
+            "param_descriptions_zh": self.param_descriptions_zh,
             "input_contract": {
                 "contract_version": contract_version,
                 "execution_model": execution_model,

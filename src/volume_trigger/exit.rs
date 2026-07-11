@@ -91,6 +91,7 @@ pub fn match_volume_trigger_exit(
 mod tests {
     use super::*;
     use crate::volume_trigger::signal::VolumeTriggerSignalType;
+    use std::collections::BTreeMap;
 
     fn make_bar(symbol: &str, ts: &str, close: f64, volume: f64) -> Bar {
         Bar {
