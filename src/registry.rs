@@ -579,6 +579,19 @@ pub static ALL_OPERATORS: LazyLock<Vec<OperatorEntry>> = LazyLock::new(|| {
             default_params: json!({"index_symbol": "IDX_SH000001", "ma_len": 20, "slope_lag": 5, "confirm_days": 3, "boll_len": 20, "boll_k": 2.0, "momentum_lag": 20, "deny_scale": 0.0}),
             param_descriptions_zh: json!({"index_symbol": "指数符号(IDX_前缀，需存在于数据集)", "ma_len": "均线周期", "slope_lag": "均线斜率回看交易日数", "confirm_days": "状态翻转连续确认天数(迟滞)", "boll_len": "大盘布林带周期(入场例外判定)", "boll_k": "大盘布林带标准差倍数(入场例外判定)", "momentum_lag": "大盘动量回看交易日数(区分上行/下跌震荡)", "deny_scale": "下跌震荡态入场缩仓系数(0=禁买,0.5=半仓,1=不门控)"}),
         },
+        OperatorEntry {
+            operator_key: "regime_sector_gate_v1",
+            operator_type: "gate",
+            execution_model: "columnar",
+            aliases: &["regime_sector_gate"],
+            dependencies: &[],
+            output_columns: &["sector_entry_override"],
+            input_fields_zh: zh!["K线数据", "板块指数日线帧(IDX_BK前缀)", "个股-板块映射sidecar(sector_map.json)", "大盘指数帧(rs_lag>0时作个股相对强度基准)"],
+            output_fields_zh: zh!["板块强势解禁信号(1=所属板块趋势态占比达标可放行,0=无解禁)"],
+            description_zh: "板块状态解禁门控：对数据集内每个板块合成指数帧(IDX_BK前缀,自有CH成分股等权合成)在线计算 close>MA(N) 且 MA 上行 + confirm_days 迟滞 + D+1 生效的二态 regime，并叠加板块自身动量(momentum_lag日,与大盘三态同构)——趋势态且动量≥0才算强板块；按 sidecar 映射(个股→概念板块)聚合，个股当日有数据板块中强板块占比 ≥ sector_quorum 时通过 quorum；rs_lag>0 时额外要求个股相对强度——个股 rs_lag 日收益 ≥ 大盘指数(rs_index_symbol)同期收益 + rs_min_excess(D+1)，quorum 与个股RS同时达标才输出 sector_entry_override=1。仅作放宽：position_manager 取 max(大盘门, 板块解禁)，大盘禁买日所属板块强势且个股跑赢大盘的个股仍可全仓买入",
+            default_params: json!({"mapping_path": "", "sector_index_prefix": "IDX_BK", "ma_len": 20, "slope_lag": 5, "confirm_days": 3, "momentum_lag": 20, "sector_quorum": 0.5, "min_sectors_with_data": 1, "rs_lag": 0, "rs_min_excess": 0.0, "rs_index_symbol": "IDX_SH000001", "sector_api_base": "", "sector_api_sector_type": "concept", "sector_api_weight_mode": "equal", "sector_api_lookback_days": 420}),
+            param_descriptions_zh: json!({"mapping_path": "个股-板块映射 sidecar 绝对路径(dataset 目录下 sector_map.json；启用 sector_api_base 时由 worker 自动覆盖)", "sector_index_prefix": "板块指数符号前缀(默认 IDX_BK)", "ma_len": "板块指数均线周期", "slope_lag": "均线斜率回看交易日数", "confirm_days": "状态翻转连续确认天数(迟滞)", "momentum_lag": "板块动量回看交易日数(趋势态需叠加动量≥0才算强板块)", "sector_quorum": "强板块占比阈值(个股有数据板块中≥该比例为强板块则解禁)", "min_sectors_with_data": "最少有数据板块数(不足则不解禁)", "rs_lag": "个股相对强度回看交易日数(0=禁用；>0时quorum通过后还需个股该窗口收益≥大盘同期收益+rs_min_excess才解禁)", "rs_min_excess": "个股相对大盘的最小超额收益(比率差,默认0)", "rs_index_symbol": "个股相对强度基准指数符号(默认IDX_SH000001)", "sector_api_base": "板块映射服务基址(非空启用在线模式：worker 启动任务时从 sector-mapping export API 拉取虚拟K线+映射注入帧集合，替代静态 parquet/sidecar，如 http://192.168.8.188:31046)", "sector_api_sector_type": "在线模式板块类型(concept/industry)", "sector_api_weight_mode": "在线模式虚拟K线口径(equal/cap_liquidity/role_cap)", "sector_api_lookback_days": "在线模式取数回看天数(MA/动量预热)"}),
+        },
         // —— Bars operators ——
         OperatorEntry {
             operator_key: "cascade_gate_v1",
