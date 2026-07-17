@@ -42,19 +42,6 @@ pub struct VolumeTriggerParams {
     /// Default: 6 (aligned with Python)
     pub direction_lookback_bars: usize,
 
-    // ── Entry gates ──
-    /// Enable MA120 > MA200 daily trend gate. Default: true
-    pub daily_ma120_ma200_gate_enabled: bool,
-
-    /// Enable EMA fast/slow direction cascade filter. Default: true
-    pub cascade_direction_enabled: bool,
-
-    /// Fast EMA window for cascade direction. Default: 5
-    pub cascade_direction_fast: usize,
-
-    /// Slow EMA window for cascade direction. Default: 20
-    pub cascade_direction_slow: usize,
-
     // ── Position management ──
     /// Position size per trade as fraction of total capital. Default: 0.16
     pub target_position_per_trade: f64,
@@ -88,10 +75,6 @@ impl Default for VolumeTriggerParams {
             fast_threshold: 0.5,
             slow_threshold: 2.0,
             direction_lookback_bars: 6,
-            daily_ma120_ma200_gate_enabled: true,
-            cascade_direction_enabled: false,
-            cascade_direction_fast: 5,
-            cascade_direction_slow: 20,
             target_position_per_trade: 0.16,
             max_daily_buys: 1,
             max_total_position_ratio: 1.0,
@@ -106,11 +89,9 @@ impl Default for VolumeTriggerParams {
 impl VolumeTriggerParams {
     /// Build from a `serde_json::Value` parameter bag (backtest worker style).
     ///
-    /// Handles the legacy DSL→worker parameter mapping:
-    /// - `fast_threshold` maps to both `volume_trigger_ratio` and `trigger_fast_threshold`
-    /// - `slow_threshold` maps to both `cascade_volume_ratio` and `trigger_slow_threshold`
-    /// - `fast_window_days` maps to both `trigger_fast_window_days` and `cascade_direction_fast_window`
-    /// - `slow_window_days` maps to both `trigger_slow_window_days` and `cascade_direction_slow_window`
+    /// Accepts both canonical keys (`trigger_fast_threshold`, `trigger_fast_window_days`, ...)
+    /// and short keys (`fast_threshold`, `fast_window_days`, ...). Short keys take priority
+    /// so trial parameter values from optimize-fusion override pipeline/registry defaults.
     pub fn from_value(params: &Value) -> Self {
         let mut p = Self::default();
 
@@ -162,37 +143,6 @@ impl VolumeTriggerParams {
             .map(|v| v as usize)
             .unwrap_or(p.direction_lookback_bars)
             .max(1);
-
-        // Gates
-        if let Some(v) = params
-            .get("daily_ma120_ma200_buy_gate_enabled")
-            .and_then(Value::as_bool)
-        {
-            p.daily_ma120_ma200_gate_enabled = v;
-        }
-        if let Some(v) = params
-            .get("cascade_direction_enabled")
-            .and_then(Value::as_bool)
-        {
-            p.cascade_direction_enabled = v;
-        }
-
-        // Cascade direction windows
-        p.cascade_direction_fast = params
-            .get("cascade_direction_fast_window")
-            .or_else(|| params.get("fast_window_days"))
-            .and_then(|v| v.as_u64())
-            .map(|v| v as usize)
-            .unwrap_or(p.cascade_direction_fast)
-            .max(2);
-
-        p.cascade_direction_slow = params
-            .get("cascade_direction_slow_window")
-            .or_else(|| params.get("slow_window_days"))
-            .and_then(|v| v.as_u64())
-            .map(|v| v as usize)
-            .unwrap_or(p.cascade_direction_slow)
-            .max(p.cascade_direction_fast + 1);
 
         // Position management
         p.target_position_per_trade = params
@@ -263,10 +213,6 @@ impl VolumeTriggerParams {
             "slow_threshold": self.slow_threshold,
             "slow_is_binding": self.slow_is_binding(),
             "direction_lookback_bars": self.direction_lookback_bars,
-            "daily_ma120_ma200_gate": self.daily_ma120_ma200_gate_enabled,
-            "cascade_direction": self.cascade_direction_enabled,
-            "cascade_direction_fast": self.cascade_direction_fast,
-            "cascade_direction_slow": self.cascade_direction_slow,
             "target_position_per_trade": self.target_position_per_trade,
             "max_daily_buys": self.max_daily_buys,
             "max_total_position_ratio": self.max_total_position_ratio,

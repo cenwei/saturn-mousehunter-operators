@@ -487,14 +487,10 @@ pub static ALL_OPERATORS: LazyLock<Vec<OperatorEntry>> = LazyLock::new(|| {
                 "fast_window_days": 3,
                 "slow_window_days": 15,
                 "direction_lookback_bars": 6,
-                "daily_ma120_ma200_gate_enabled": true,
-                "cascade_direction_enabled": false,
-                "cascade_direction_fast_window": 5,
-                "cascade_direction_slow_window": 20,
                 "bars_per_day": 16,
                 "t_plus_one": true
             }),
-            param_descriptions_zh: json!({"fast_threshold": "快窗量比阈值","slow_threshold": "慢窗量比阈值","fast_window_days": "快窗口周期（日）","slow_window_days": "慢窗口周期（日）","direction_lookback_bars": "方向回看K线数","daily_ma120_ma200_gate_enabled": "启用日线MA120/MA200门控","cascade_direction_enabled": "启用级联方向","cascade_direction_fast_window": "级联方向快窗","cascade_direction_slow_window": "级联方向慢窗","bars_per_day": "每日K线数","t_plus_one": "T+1交易制度"}),
+            param_descriptions_zh: json!({"fast_threshold": "快窗量比阈值（慢窗阈值≥快窗阈值时恒不生效）","slow_threshold": "慢窗量比阈值（主约束：当日量≥15日最大日内量×该值）","fast_window_days": "快窗口周期（日）","slow_window_days": "慢窗口周期（日）","direction_lookback_bars": "方向回看K线数","bars_per_day": "每日K线数","t_plus_one": "T+1交易制度"}),
         },
         OperatorEntry {
             operator_key: "window_kline_updown_stats_v1",
